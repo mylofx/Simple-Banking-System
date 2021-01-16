@@ -1,0 +1,200 @@
+<html>
+<head>
+<title>banking.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #0033b3;}
+.s1 { color: #080808;}
+.s2 { color: #008080; font-weight: bold;}
+.s3 { color: #1750eb;}
+</style>
+</head>
+<body bgcolor="#ffffff">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#c0c0c0" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+banking.py</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">random</span>
+<span class="s0">import </span><span class="s1">sqlite3</span>
+<span class="s0">from </span><span class="s1">sqlite3 </span><span class="s0">import </span><span class="s1">Error</span>
+
+
+<span class="s0">try</span><span class="s1">:</span>
+    <span class="s1">conn = sqlite3.connect(</span><span class="s2">'card.s3db'</span><span class="s1">)</span>
+<span class="s0">except </span><span class="s1">Error </span><span class="s0">as </span><span class="s1">e:</span>
+    <span class="s1">print(e)</span>
+<span class="s1">cur = conn.cursor()</span>
+
+<span class="s0">try</span><span class="s1">:</span>
+    <span class="s1">cur.execute(</span><span class="s2">'CREATE TABLE card(id integer, number text, pin text, balance integer)'</span><span class="s1">)</span>
+<span class="s0">except</span><span class="s1">:</span>
+    <span class="s0">pass</span>
+<span class="s1">conn.commit()</span>
+<span class="s0">class </span><span class="s1">CardBank:</span>
+    <span class="s1">recovery = </span><span class="s0">False</span>
+    <span class="s1">all_cards = []</span>
+    <span class="s1">id_uni = </span><span class="s3">1</span>
+    <span class="s0">def </span><span class="s1">__init__(self):</span>
+        <span class="s1">self.id = CardBank.id_uni</span>
+        <span class="s1">CardBank.id_uni += </span><span class="s3">1</span>
+        <span class="s1">self.card_number = </span><span class="s2">'400000' </span><span class="s1">+ str(random.randint(</span><span class="s3">0</span><span class="s1">, </span><span class="s3">9</span><span class="s1">)) + str(random.randint(</span><span class="s3">0</span><span class="s1">, </span><span class="s3">9</span><span class="s1">)) + str(random.randint(</span><span class="s3">0</span><span class="s1">, </span><span class="s3">9</span><span class="s1">)) + str(random.randint(</span><span class="s3">0</span><span class="s1">, </span><span class="s3">9</span><span class="s1">)) + str(random.randint(</span><span class="s3">0</span><span class="s1">, </span><span class="s3">9</span><span class="s1">)) + str(random.randint(</span><span class="s3">0</span><span class="s1">, </span><span class="s3">9</span><span class="s1">))+ str(random.randint(</span><span class="s3">0</span><span class="s1">, </span><span class="s3">9</span><span class="s1">)) + str(random.randint(</span><span class="s3">0</span><span class="s1">, </span><span class="s3">9</span><span class="s1">)) + str(random.randint(</span><span class="s3">0</span><span class="s1">, </span><span class="s3">9</span><span class="s1">))</span>
+        <span class="s1">self.check_sum = </span><span class="s3">0</span>
+        <span class="s1">x = </span><span class="s3">15</span>
+        <span class="s0">for </span><span class="s1">i </span><span class="s0">in </span><span class="s1">self.card_number:</span>
+            <span class="s1">i = int(i)</span>
+            <span class="s0">if </span><span class="s1">x % </span><span class="s3">2 </span><span class="s1">!= </span><span class="s3">0</span><span class="s1">:</span>
+                <span class="s1">i *= </span><span class="s3">2</span>
+            <span class="s0">if </span><span class="s1">i &gt; </span><span class="s3">9</span><span class="s1">:</span>
+                <span class="s1">i -= </span><span class="s3">9</span>
+            <span class="s1">self.check_sum += i</span>
+            <span class="s1">x -= </span><span class="s3">1</span>
+        <span class="s0">if </span><span class="s1">self.check_sum % </span><span class="s3">10 </span><span class="s1">== </span><span class="s3">0</span><span class="s1">:</span>
+            <span class="s1">self.check_sum = </span><span class="s3">0</span>
+        <span class="s0">else</span><span class="s1">:</span>
+            <span class="s1">self.check_sum = </span><span class="s3">10 </span><span class="s1">- self.check_sum % </span><span class="s3">10</span>
+        <span class="s1">self.card_number += str(self.check_sum)</span>
+        <span class="s1">self.card_number = int(self.card_number)</span>
+        <span class="s1">self.pin = str(random.randint(</span><span class="s3">0</span><span class="s1">, </span><span class="s3">9</span><span class="s1">)) + str(random.randint(</span><span class="s3">0</span><span class="s1">, </span><span class="s3">9</span><span class="s1">)) + str(random.randint(</span><span class="s3">0</span><span class="s1">, </span><span class="s3">9</span><span class="s1">)) + str(random.randint(</span><span class="s3">0</span><span class="s1">, </span><span class="s3">9</span><span class="s1">))</span>
+        <span class="s1">self.balance = </span><span class="s3">0</span>
+        <span class="s0">if </span><span class="s1">CardBank.recovery:</span>
+            <span class="s1">print(</span><span class="s2">&quot;&quot;&quot;Your card has been created 
+Your card number:&quot;&quot;&quot;</span><span class="s1">)</span>
+            <span class="s1">print(self.card_number)</span>
+            <span class="s1">print(</span><span class="s2">&quot;Your card PIN:&quot;</span><span class="s1">)</span>
+            <span class="s1">print(self.pin)</span>
+            <span class="s1">CardBank.all_cards.append(self)</span>
+            <span class="s1">cur.execute(</span><span class="s2">'INSERT INTO card (id, number, pin, balance) VALUES (?, ?, ?, ?)'</span><span class="s1">, (self.id, self.card_number, self.pin, self.balance))</span>
+            <span class="s1">conn.commit()</span>
+
+<span class="s1">off = </span><span class="s0">False</span>
+<span class="s1">logged = </span><span class="s0">False</span>
+
+<span class="s0">def </span><span class="s1">recover():</span>
+    <span class="s1">CardBank.all_cards = []</span>
+    <span class="s1">CardBank.recovery = </span><span class="s0">False</span>
+    <span class="s1">xxd = </span><span class="s2">'1'</span>
+    <span class="s1">cur.execute(</span><span class="s2">&quot;SELECT * From card&quot;</span><span class="s1">)</span>
+    <span class="s1">arasiz = cur.fetchall()</span>
+    <span class="s0">for </span><span class="s1">i </span><span class="s0">in </span><span class="s1">range(len(arasiz)):</span>
+        <span class="s1">xxd = str(xxd)</span>
+        <span class="s1">new_recover = CardBank()</span>
+        <span class="s1">cur.execute(</span><span class="s2">'SELECT number FROM card WHERE id = ?'</span><span class="s1">, (xxd,))</span>
+        <span class="s1">new_recover.card_number = cur.fetchone()[</span><span class="s3">0</span><span class="s1">]</span>
+        <span class="s1">cur.execute(</span><span class="s2">'SELECT pin FROM card WHERE id = ?'</span><span class="s1">, (xxd,))</span>
+        <span class="s1">new_recover.pin = cur.fetchone()[</span><span class="s3">0</span><span class="s1">]</span>
+        <span class="s1">cur.execute(</span><span class="s2">'SELECT balance FROM card WHERE id = ?'</span><span class="s1">, (xxd,))</span>
+        <span class="s1">new_recover.balance = cur.fetchone()[</span><span class="s3">0</span><span class="s1">]</span>
+        <span class="s1">CardBank.all_cards.append(new_recover)</span>
+        <span class="s1">xxd = int(xxd)</span>
+        <span class="s1">xxd += </span><span class="s3">1</span>
+    <span class="s1">CardBank.recovery = </span><span class="s0">True</span>
+
+
+<span class="s1">recover()</span>
+
+<span class="s0">while </span><span class="s1">off == </span><span class="s0">False</span><span class="s1">:</span>
+
+    <span class="s0">if </span><span class="s1">logged == </span><span class="s0">False</span><span class="s1">:</span>
+        <span class="s1">print(</span><span class="s2">&quot;&quot;&quot;1. Create an account 
+2. Log into account 
+0. Exit&quot;&quot;&quot;</span><span class="s1">)</span>
+        <span class="s1">inxput = input()</span>
+        <span class="s0">if </span><span class="s1">inxput == </span><span class="s2">'1'</span><span class="s1">:</span>
+            <span class="s1">new_card = CardBank()</span>
+        <span class="s0">elif </span><span class="s1">inxput == </span><span class="s2">'2'</span><span class="s1">:</span>
+            <span class="s1">print(</span><span class="s2">'Enter your card number:'</span><span class="s1">)</span>
+            <span class="s1">loginnumber = int(input())</span>
+            <span class="s1">print(</span><span class="s2">&quot;Enter your PIN:&quot;</span><span class="s1">)</span>
+            <span class="s1">loginpin = input()</span>
+            <span class="s0">for </span><span class="s1">logincard </span><span class="s0">in </span><span class="s1">CardBank.all_cards:</span>
+                <span class="s0">if </span><span class="s1">loginnumber == int(logincard.card_number) </span><span class="s0">and </span><span class="s1">loginpin == str(logincard.pin):</span>
+                    <span class="s1">logged = </span><span class="s0">True</span>
+                    <span class="s1">print(</span><span class="s2">'You have successfully logged in!'</span><span class="s1">)</span>
+                    <span class="s0">break</span>
+            <span class="s0">else</span><span class="s1">:</span>
+                <span class="s1">print(</span><span class="s2">'Wrong card number or PIN!'</span><span class="s1">)</span>
+        <span class="s0">elif </span><span class="s1">inxput == </span><span class="s2">'0'</span><span class="s1">:</span>
+            <span class="s1">off = </span><span class="s0">True</span>
+    <span class="s0">else</span><span class="s1">:</span>
+        <span class="s1">print(</span><span class="s2">&quot;&quot;&quot;1. Balance 
+2. Add income 
+3. Do transfer 
+4. Close account 
+5. Log out 
+0. Exit&quot;&quot;&quot;</span><span class="s1">)</span>
+        <span class="s1">inxpu2 = input()</span>
+        <span class="s0">if </span><span class="s1">inxpu2 == </span><span class="s2">'1'</span><span class="s1">:</span>
+            <span class="s1">print(</span><span class="s2">'Balance:'</span><span class="s1">,  logincard.balance)</span>
+        <span class="s0">elif </span><span class="s1">inxpu2 == </span><span class="s2">'0'</span><span class="s1">:</span>
+            <span class="s1">off = </span><span class="s0">True</span>
+        <span class="s0">elif </span><span class="s1">inxpu2 == </span><span class="s2">'5'</span><span class="s1">:</span>
+            <span class="s1">logged = </span><span class="s0">False</span>
+            <span class="s1">print(</span><span class="s2">'You have successfully logged out!'</span><span class="s1">)</span>
+        <span class="s0">elif </span><span class="s1">inxpu2 == </span><span class="s2">'2'</span><span class="s1">:</span>
+            <span class="s1">print(</span><span class="s2">'Enter income:'</span><span class="s1">)</span>
+            <span class="s1">logincard.balance += int(input())</span>
+            <span class="s1">cur.execute(</span><span class="s2">'update card set balance = ? where number = ?'</span><span class="s1">, (logincard.balance, logincard.card_number))</span>
+            <span class="s1">conn.commit()</span>
+            <span class="s1">print(</span><span class="s2">'Income was added!'</span><span class="s1">)</span>
+            <span class="s1">recover()</span>
+        <span class="s0">elif </span><span class="s1">inxpu2 == </span><span class="s2">'3'</span><span class="s1">:</span>
+            <span class="s1">print(</span><span class="s2">'Enter card number:'</span><span class="s1">)</span>
+            <span class="s1">transfer_card = int(input())</span>
+            <span class="s1">luhn = </span><span class="s3">0</span>
+            <span class="s1">luhn_index = </span><span class="s3">15</span>
+            <span class="s0">for </span><span class="s1">luchned </span><span class="s0">in </span><span class="s1">str(transfer_card):</span>
+                <span class="s1">luchned = int(luchned)</span>
+                <span class="s0">if </span><span class="s1">luhn_index % </span><span class="s3">2 </span><span class="s1">!= </span><span class="s3">0</span><span class="s1">:</span>
+                    <span class="s1">luchned *= </span><span class="s3">2</span>
+                <span class="s0">if </span><span class="s1">luchned &gt; </span><span class="s3">9</span><span class="s1">:</span>
+                    <span class="s1">luchned -= </span><span class="s3">9</span>
+                <span class="s1">luhn += luchned</span>
+                <span class="s1">luhn_index -= </span><span class="s3">1</span>
+            <span class="s0">if </span><span class="s1">luhn % </span><span class="s3">10 </span><span class="s1">== </span><span class="s3">0 </span><span class="s0">and </span><span class="s1">int(transfer_card) != int(logincard.card_number):</span>
+                <span class="s1">transaaction = </span><span class="s0">True</span>
+
+                <span class="s0">try</span><span class="s1">:</span>
+                    <span class="s1">cur.execute(</span><span class="s2">'select number from card where number = ?'</span><span class="s1">, (str(transfer_card),))</span>
+                    <span class="s1">checking_nb = cur.fetchone()[</span><span class="s3">0</span><span class="s1">]</span>
+
+                <span class="s0">except</span><span class="s1">:</span>
+                        <span class="s1">print(</span><span class="s2">'Such a card does not exist.'</span><span class="s1">)</span>
+                        <span class="s1">transaaction = </span><span class="s0">False</span>
+                <span class="s0">finally</span><span class="s1">:</span>
+                    <span class="s0">if </span><span class="s1">transaaction == </span><span class="s0">True</span><span class="s1">:</span>
+                        <span class="s1">print(</span><span class="s2">'Enter how much money you want to transfer:'</span><span class="s1">)</span>
+                        <span class="s1">transfer_money = int(input())</span>
+                        <span class="s1">cur.execute(</span><span class="s2">'select balance from card where number = ?'</span><span class="s1">, (str(logincard.card_number),))</span>
+                        <span class="s1">logincard.balance = cur.fetchone()[</span><span class="s3">0</span><span class="s1">]</span>
+                        <span class="s0">if </span><span class="s1">transfer_money &gt; logincard.balance:</span>
+                            <span class="s1">print(</span><span class="s2">'Not enough money!'</span><span class="s1">)</span>
+                        <span class="s0">else</span><span class="s1">:</span>
+                            <span class="s1">logincard.balance -= transfer_money</span>
+                            <span class="s1">cur.execute(</span><span class="s2">'select balance from card where number = ?'</span><span class="s1">, (str(transfer_card),))</span>
+                            <span class="s1">transfer_balance = cur.fetchone()[</span><span class="s3">0</span><span class="s1">]</span>
+                            <span class="s1">transfer_balance = int(transfer_balance) + transfer_money</span>
+                            <span class="s1">cur.execute(</span><span class="s2">'update card set balance = ? where number = ?'</span><span class="s1">, (str(logincard.balance), str(logincard.card_number) ))</span>
+                            <span class="s1">cur.execute(</span><span class="s2">'update card set balance = ? where number = ?'</span><span class="s1">, (str(transfer_balance), str(transfer_card)))</span>
+                            <span class="s1">conn.commit()</span>
+                            <span class="s1">print(</span><span class="s2">'Success!'</span><span class="s1">)</span>
+                            <span class="s1">recover()</span>
+
+            <span class="s0">elif </span><span class="s1">transfer_card == int(logincard.card_number):</span>
+                <span class="s1">print(</span><span class="s2">&quot;You can't transfer money to the same account!&quot;</span><span class="s1">)</span>
+            <span class="s0">else</span><span class="s1">:</span>
+                <span class="s1">print(</span><span class="s2">'Probably you made a mistake in the card number. Please try again!'</span><span class="s1">)</span>
+
+        <span class="s0">elif </span><span class="s1">inxpu2 == </span><span class="s2">'4'</span><span class="s1">:</span>
+            <span class="s1">conn.execute(</span><span class="s2">'DELETE FROM card WHERE number = ?'</span><span class="s1">,((logincard.card_number,)))</span>
+            <span class="s1">print(</span><span class="s2">'The account has been closed!'</span><span class="s1">)</span>
+            <span class="s1">logged = </span><span class="s0">False</span>
+            <span class="s1">conn.commit()</span>
+            <span class="s1">recover()</span>
+<span class="s1">conn.commit()</span>
+<span class="s1">conn.close()</span>
+<span class="s1">print(</span><span class="s2">'Bye!'</span><span class="s1">)</span>
+
+</pre>
+</body>
+</html>
